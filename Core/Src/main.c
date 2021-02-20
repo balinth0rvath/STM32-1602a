@@ -95,6 +95,7 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   lcd_driver_init();
+  lcd_driver_write("message");
 
   /* USER CODE END 2 */
 
