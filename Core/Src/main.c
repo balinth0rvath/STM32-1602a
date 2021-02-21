@@ -105,13 +105,14 @@ int main(void)
   {
     /* USER CODE BEGIN 3 */
     lcd_driver_home();
-    lcd_driver_write("Hello!          ");
+    lcd_driver_write("Hello!          0123456789abcdef01234567  second row");
     HAL_Delay(1000);
     lcd_driver_home();
-    lcd_driver_write("     Hello!     ");
+    lcd_driver_write("      Hello!    0123456789abcdef01234567 second row ");
     HAL_Delay(1000);
     lcd_driver_home();
-    lcd_driver_write("          Hello!");
+    lcd_driver_write("          Hello!0123456789abcdef01234567second row  ");
+
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
