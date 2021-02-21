@@ -19,7 +19,16 @@ static void lcd_driver_send(uint8_t value,mode_t mode);
 static void lcd_driver_write_cmd(uint8_t cmd);
 static void lcd_driver_write_data(uint8_t data);
 
-static uint8_t init_sequence[] = {0x02, 0x28, 0x0c, 0x06, 0x01, 0x80, 0x00};
+extern TIM_HandleTypeDef htim2;
+
+static uint8_t init_sequence[] = {
+    0x02, // 0000 0010  Set 4 bit mode
+    0x28, // 0010 1000  Set 2 line display mode, 5x8 font
+    0x0c, // 0000 1100  Display on, cursor off, cursor blink off
+    0x06, // 0000 0110  Cursor blink moves to right and DDRAM address increased by 1
+    0x01, // 0000 0001  Clear display
+    0x80, // 1000 0000  Set DDRAM address to 0
+    0x00};
 
 void lcd_driver_init()
 {
@@ -36,6 +45,11 @@ void lcd_driver_write(char* message)
   {
      lcd_driver_write_data(*(message++));
   }
+}
+
+void lcd_driver_home()
+{
+  lcd_driver_write_cmd(init_sequence[5]);
 }
 
 static void lcd_driver_write_cmd(uint8_t cmd)
@@ -91,11 +105,18 @@ static void lcd_driver_send(uint8_t value, mode_t mode)
       default:
         break;
     }
+    __HAL_TIM_SET_COUNTER(&htim2,0);
+    while(__HAL_TIM_GET_COUNTER(&htim2)<16) // 160us
+    {
+    }
 
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-    HAL_Delay(50);
+    __HAL_TIM_SET_COUNTER(&htim2,0);
+    while(__HAL_TIM_GET_COUNTER(&htim2)<8) // 80us
+    {
+    }
+
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
-    HAL_Delay(200);
   }
 }
 

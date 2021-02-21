@@ -95,7 +95,7 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   lcd_driver_init();
-  lcd_driver_write("message");
+
 
   /* USER CODE END 2 */
 
@@ -103,14 +103,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-    uint16_t counter = __HAL_TIM_GET_COUNTER(&htim2);
-    if (counter == 100)
-      HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
-
-    if (counter == 300)
-      HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_RESET);
     /* USER CODE BEGIN 3 */
+    lcd_driver_home();
+    lcd_driver_write("Hello!          ");
+    HAL_Delay(1000);
+    lcd_driver_home();
+    lcd_driver_write("     Hello!     ");
+    HAL_Delay(1000);
+    lcd_driver_home();
+    lcd_driver_write("          Hello!");
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -171,9 +173,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 63999;
+  htim2.Init.Prescaler = 640; // 10us/100kHz
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 500;
+  htim2.Init.Period = 16;   //  160us
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
