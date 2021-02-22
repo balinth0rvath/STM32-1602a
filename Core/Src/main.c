@@ -105,15 +105,18 @@ int main(void)
   {
     /* USER CODE BEGIN 3 */
     lcd_driver_home();
-    lcd_driver_write("Hello!          0123456789abcdef01234567  second row");
+    lcd_driver_write("Hello! -------:)");
     HAL_Delay(1000);
     lcd_driver_home();
-    lcd_driver_write("      Hello!    0123456789abcdef01234567 second row ");
+    lcd_driver_shift_right(40);
+    lcd_driver_write("second row +++:)");
     HAL_Delay(1000);
-    lcd_driver_home();
-    lcd_driver_write("          Hello!0123456789abcdef01234567second row  ");
-
-    HAL_Delay(1000);
+    for(int i=0;i<72;i++)
+    {
+      lcd_driver_write(" ");
+      lcd_driver_shift_left(2);
+      HAL_Delay(100);
+    }
   }
   /* USER CODE END 3 */
 }

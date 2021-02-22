@@ -21,6 +21,9 @@ static void lcd_driver_write_data(uint8_t data);
 
 extern TIM_HandleTypeDef htim2;
 
+static uint8_t go_home       =  0x80;
+static uint8_t cursor_shift  =  0x10;
+
 static uint8_t init_sequence[] = {
     0x02, // 0000 0010  Set 4 bit mode
     0x28, // 0010 1000  Set 2 line display mode, 5x8 font
@@ -49,8 +52,22 @@ void lcd_driver_write(char* message)
 
 void lcd_driver_home()
 {
-  lcd_driver_write_cmd(init_sequence[5]);
+  lcd_driver_write_cmd(go_home);
 }
+
+
+void lcd_driver_shift_right(uint8_t pos)
+{
+  for(int i=0;i<pos;++i)
+    lcd_driver_write_cmd(cursor_shift | 4);
+}
+
+void lcd_driver_shift_left(uint8_t pos)
+{
+  for(int i=0;i<pos;++i)
+      lcd_driver_write_cmd(cursor_shift);
+}
+
 
 static void lcd_driver_write_cmd(uint8_t cmd)
 {
