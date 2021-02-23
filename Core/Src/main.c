@@ -20,6 +20,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "lcd_driver.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -95,30 +97,17 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   lcd_driver_init();
+  TaskHandle_t handle = NULL;
+  BaseType_t ret = xTaskCreate(lcd_driver_process_queue, "lcd_driver", 64, NULL, 1, &handle );
 
+  if (ret == pdPASS)
+  {
 
+  }
+
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE BEGIN 3 */
-    lcd_driver_home();
-    lcd_driver_write("Hello! -------:)");
-    HAL_Delay(1000);
-    lcd_driver_home();
-    lcd_driver_shift_right(40);
-    lcd_driver_write("second row +++:)");
-    HAL_Delay(1000);
-    for(int i=0;i<72;i++)
-    {
-      lcd_driver_write(" ");
-      lcd_driver_shift_left(2);
-      HAL_Delay(100);
-    }
-  }
-  /* USER CODE END 3 */
 }
 
 /**
