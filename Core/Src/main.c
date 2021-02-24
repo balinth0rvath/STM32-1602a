@@ -72,6 +72,8 @@ static void MX_TIM2_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  TaskHandle_t handle = NULL;
+  BaseType_t ret = xTaskCreate(lcd_driver_process_queue, "lcd_driver", 64, NULL, 1, &handle );
 
   /* USER CODE END 1 */
 
@@ -96,14 +98,6 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  lcd_driver_init();
-  TaskHandle_t handle = NULL;
-  BaseType_t ret = xTaskCreate(lcd_driver_process_queue, "lcd_driver", 64, NULL, 1, &handle );
-
-  if (ret == pdPASS)
-  {
-
-  }
 
   vTaskStartScheduler();
   /* USER CODE END 2 */
