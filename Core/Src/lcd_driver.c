@@ -44,7 +44,10 @@ void lcd_driver_init()
 
 void lcd_driver_process_queue()
 {
-  HAL_Delay(500);
+  while(1)
+  {
+    HAL_Delay(200);
+  }
 }
 
 void lcd_driver_write(char* message)

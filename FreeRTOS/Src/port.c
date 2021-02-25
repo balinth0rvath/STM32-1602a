@@ -437,6 +437,8 @@ void xPortSysTickHandler( void )
      * known. */
     portDISABLE_INTERRUPTS();
     {
+        /* from original systickhandler */
+        HAL_IncTick();
         /* Increment the RTOS tick. */
         if( xTaskIncrementTick() != pdFALSE )
         {
