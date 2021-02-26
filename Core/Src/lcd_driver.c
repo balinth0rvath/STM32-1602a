@@ -2,6 +2,7 @@
 #include "lcd_driver.h"
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "string.h"
 
 /*
  *  RS  - GPIOB_PIN_5 - Register select
@@ -16,10 +17,13 @@
  *  DB7 - GPIOC_PIN_0
  */
 
+typedef enum {OFF, ON} state_t;
 typedef enum {COMMAND, DATA} mode_t;
 static void lcd_driver_send(uint8_t value,mode_t mode);
-static void lcd_driver_write_cmd(uint8_t cmd);
-static void lcd_driver_write_data(uint8_t data);
+static void lcd_driver_send_cmd(uint8_t cmd);
+static void lcd_driver_send_data(uint8_t data);
+
+static state_t state = OFF;
 
 static QueueHandle_t lcd_queue;
 
@@ -27,6 +31,9 @@ extern TIM_HandleTypeDef htim2;
 
 static uint8_t go_home       =  0x80;
 static uint8_t cursor_shift  =  0x10;
+
+static char buffer[40] = "";
+
 
 static uint8_t init_sequence[] = {
     0x02, // 0000 0010  Set 4 bit mode
@@ -42,11 +49,24 @@ void lcd_driver_init()
   uint8_t* p = init_sequence;
   for (int i=0; *p; ++i )
   {
-    lcd_driver_write_cmd(*(p++));
+    lcd_driver_send_cmd(*(p++));
   }
 
-  int s = sizeof(uint8_t*);
-  lcd_queue = xQueueCreate(10, sizeof(uint8_t*));
+  lcd_queue = xQueueCreate(10, sizeof(char*));
+
+  if (lcd_queue != NULL)
+  {
+    state = ON;
+  }
+}
+
+void lcd_driver_write(char* message)
+{
+  if (state == ON)
+  {
+    memcpy(buffer, message, strlen(message));
+    xQueueSend(lcd_queue, (void*) &buffer, 0);
+  }
 }
 
 void lcd_driver_task()
@@ -54,43 +74,42 @@ void lcd_driver_task()
   lcd_driver_init();
   while(1)
   {
-    HAL_Delay(200);
-  }
-}
-
-void lcd_driver_write(char* message)
-{
-  while(*message)
-  {
-     lcd_driver_write_data(*(message++));
+    if (xQueueReceive(lcd_queue, buffer, portMAX_DELAY))
+    {
+      int i = 0;
+      while(buffer[i])
+        {
+           lcd_driver_send_data(buffer[i++]);
+        }
+    }
   }
 }
 
 void lcd_driver_home()
 {
-  lcd_driver_write_cmd(go_home);
+  lcd_driver_send_cmd(go_home);
 }
 
 
 void lcd_driver_shift_right(uint8_t pos)
 {
   for(int i=0;i<pos;++i)
-    lcd_driver_write_cmd(cursor_shift | 4);
+    lcd_driver_send_cmd(cursor_shift | 4);
 }
 
 void lcd_driver_shift_left(uint8_t pos)
 {
   for(int i=0;i<pos;++i)
-      lcd_driver_write_cmd(cursor_shift);
+      lcd_driver_send_cmd(cursor_shift);
 }
 
 
-static void lcd_driver_write_cmd(uint8_t cmd)
+static void lcd_driver_send_cmd(uint8_t cmd)
 {
   lcd_driver_send(cmd, COMMAND);
 }
 
-static void lcd_driver_write_data(uint8_t cmd)
+static void lcd_driver_send_data(uint8_t cmd)
 {
   lcd_driver_send(cmd, DATA);
 
