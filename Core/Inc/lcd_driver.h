@@ -14,7 +14,7 @@ void lcd_driver_home();
 void lcd_driver_shift_right(uint8_t pos);
 void lcd_driver_shift_left(uint8_t pos);
 
-void lcd_driver_process_queue();
+void lcd_driver_task();
 
 
 #endif /* INC_LCD_DRIVER_H_ */

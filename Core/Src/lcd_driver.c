@@ -1,5 +1,7 @@
 #include "main.h"
 #include "lcd_driver.h"
+#include "FreeRTOS.h"
+#include "queue.h"
 
 /*
  *  RS  - GPIOB_PIN_5 - Register select
@@ -18,6 +20,8 @@ typedef enum {COMMAND, DATA} mode_t;
 static void lcd_driver_send(uint8_t value,mode_t mode);
 static void lcd_driver_write_cmd(uint8_t cmd);
 static void lcd_driver_write_data(uint8_t data);
+
+static QueueHandle_t lcd_queue;
 
 extern TIM_HandleTypeDef htim2;
 
@@ -40,10 +44,14 @@ void lcd_driver_init()
   {
     lcd_driver_write_cmd(*(p++));
   }
+
+  int s = sizeof(uint8_t*);
+  lcd_queue = xQueueCreate(10, sizeof(uint8_t*));
 }
 
-void lcd_driver_process_queue()
+void lcd_driver_task()
 {
+  lcd_driver_init();
   while(1)
   {
     HAL_Delay(200);

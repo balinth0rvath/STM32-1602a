@@ -98,5 +98,15 @@ NVIC value of 255. */
 #define configCOM1_RX_BUFFER_LENGTH		128
 #define configCOM1_TX_BUFFER_LENGTH		128
 
+/*-----------------------------------------------------------
+ * Custom configuration (external to FreeRTOS)
+ *-----------------------------------------------------------*/
+
+#define PRIORITY_DRIVER                 1
+#define PRIORITY_APPLICATION            1
+
+#define STACK_SIZE_DRIVER             128
+#define STACK_SIZE_APPLICATION        128
+
 #endif /* FREERTOS_CONFIG_H */
 

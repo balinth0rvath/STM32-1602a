@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "application.h"
 #include "lcd_driver.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -72,8 +73,33 @@ static void MX_TIM2_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  TaskHandle_t handle = NULL;
-  BaseType_t ret = xTaskCreate(lcd_driver_process_queue, "lcd_driver", 64, NULL, 1, &handle );
+  TaskHandle_t handle_lcd_driver = NULL;
+  TaskHandle_t handle_application = NULL;
+  BaseType_t ret;
+
+  ret = xTaskCreate(lcd_driver_task,
+                    "lcd_driver",
+                    STACK_SIZE_DRIVER,
+                    NULL,
+                    PRIORITY_DRIVER,
+                    &handle_lcd_driver );
+
+  if (ret != pdTRUE)
+  {
+    while(1);
+  }
+
+  ret = xTaskCreate(application_task,
+                    "application",
+                    STACK_SIZE_APPLICATION,
+                    NULL,
+                    PRIORITY_APPLICATION,
+                    &handle_application );
+
+  if (ret != pdTRUE)
+  {
+    while(1);
+  }
 
   /* USER CODE END 1 */
 
