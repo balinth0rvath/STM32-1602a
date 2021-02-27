@@ -6,13 +6,15 @@
  */
 #include "application.h"
 #include "lcd_driver.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 
 void application_task()
 {
   while(1)
   {
-    lcd_driver_write("alma");
-    HAL_Delay(200);
+    lcd_driver_write("nucleo ");
+    vTaskDelay(200);
   }
 }

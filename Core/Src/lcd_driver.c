@@ -3,6 +3,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "string.h"
+#include "portable.h"
 
 /*
  *  RS  - GPIOB_PIN_5 - Register select
@@ -31,9 +32,6 @@ extern TIM_HandleTypeDef htim2;
 
 static uint8_t go_home       =  0x80;
 static uint8_t cursor_shift  =  0x10;
-
-static char buffer[40] = "";
-
 
 static uint8_t init_sequence[] = {
     0x02, // 0000 0010  Set 4 bit mode
@@ -64,24 +62,33 @@ void lcd_driver_write(char* message)
 {
   if (state == ON)
   {
+    char* buffer = NULL;
+    buffer = pvPortMalloc(strlen(message)+1);
     memcpy(buffer, message, strlen(message));
-    xQueueSend(lcd_queue, (void*) &buffer, 0);
+    *(buffer+strlen(message)) = 0;
+    xQueueSend(lcd_queue, &buffer, 0);
   }
 }
 
 void lcd_driver_task()
 {
+  char* buffer = NULL;
   lcd_driver_init();
   while(1)
   {
-    if (xQueueReceive(lcd_queue, buffer, portMAX_DELAY))
+    if (xQueueReceive(lcd_queue, &buffer, portMAX_DELAY))
     {
-      int i = 0;
-      while(buffer[i])
+      if (buffer != NULL)
+      {
+        int i = 0;
+        while(buffer[i])
         {
-           lcd_driver_send_data(buffer[i++]);
+          lcd_driver_send_data(buffer[i++]);
         }
+        vPortFree(buffer);
+      }
     }
+
   }
 }
 
