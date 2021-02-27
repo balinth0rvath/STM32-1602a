@@ -20,9 +20,11 @@
 
 typedef enum {OFF, ON} state_t;
 typedef enum {COMMAND, DATA} mode_t;
+typedef enum {DISPLAY_MESSAGE=0, CONTROL_HOME, SHIFT_LEFT, SHIFT_RIGHT} message_t;
 static void lcd_driver_send(uint8_t value,mode_t mode);
 static void lcd_driver_send_cmd(uint8_t cmd);
 static void lcd_driver_send_data(uint8_t data);
+static void lcd_driver_shift(uint8_t pos, uint8_t dir);
 
 static state_t state = OFF;
 
@@ -63,8 +65,9 @@ void lcd_driver_write(char* message)
   if (state == ON)
   {
     char* buffer = NULL;
-    buffer = pvPortMalloc(strlen(message)+1);
-    memcpy(buffer, message, strlen(message));
+    buffer = pvPortMalloc(strlen(message)+2);
+    memcpy(buffer+1, message, strlen(message));
+    *(buffer) = DISPLAY_MESSAGE;
     *(buffer+strlen(message)) = 0;
     xQueueSend(lcd_queue, &buffer, 0);
   }
@@ -80,10 +83,33 @@ void lcd_driver_task()
     {
       if (buffer != NULL)
       {
-        int i = 0;
-        while(buffer[i])
+        int i =1;
+        switch(buffer[0])
         {
-          lcd_driver_send_data(buffer[i++]);
+          case DISPLAY_MESSAGE:
+            i = 1;
+            while(buffer[i])
+            {
+              lcd_driver_send_data(buffer[i++]);
+            }
+            break;
+
+          case CONTROL_HOME:
+            lcd_driver_send_cmd(go_home);
+            break;
+
+          case SHIFT_LEFT:
+            for(int i=0;i<buffer[1];++i)
+                lcd_driver_send_cmd(cursor_shift);
+            break;
+
+          case SHIFT_RIGHT:
+            for(int i=0;i<buffer[1];++i)
+              lcd_driver_send_cmd(cursor_shift | 4);
+            break;
+
+          default:
+            break;
         }
         vPortFree(buffer);
       }
@@ -94,22 +120,42 @@ void lcd_driver_task()
 
 void lcd_driver_home()
 {
-  lcd_driver_send_cmd(go_home);
+  if (state == ON)
+  {
+    char* buffer = NULL;
+    buffer = pvPortMalloc(1);
+    *(buffer) = CONTROL_HOME;
+    xQueueSend(lcd_queue, &buffer, 0);
+  }
 }
 
 
 void lcd_driver_shift_right(uint8_t pos)
 {
-  for(int i=0;i<pos;++i)
-    lcd_driver_send_cmd(cursor_shift | 4);
+  if (state == ON)
+  {
+    uint8_t dir = SHIFT_RIGHT;
+    lcd_driver_shift(pos,dir);
+  }
 }
 
 void lcd_driver_shift_left(uint8_t pos)
 {
-  for(int i=0;i<pos;++i)
-      lcd_driver_send_cmd(cursor_shift);
+  if (state == ON)
+  {
+    uint8_t dir = SHIFT_LEFT;
+    lcd_driver_shift(pos,dir);
+  }
 }
 
+void lcd_driver_shift(uint8_t pos, uint8_t dir)
+{
+  char* buffer = NULL;
+  buffer = pvPortMalloc(2);
+  *(buffer) = dir;
+  *(buffer+1) = pos;
+  xQueueSend(lcd_queue, &buffer, 0);
+}
 
 static void lcd_driver_send_cmd(uint8_t cmd)
 {

@@ -12,9 +12,18 @@
 
 void application_task()
 {
+  int i = 0;
+  char msg[] = "nucleo";
   while(1)
   {
-    lcd_driver_write("nucleo ");
+    lcd_driver_write(msg);
+    i++;
+    if (i>9)
+    {
+      i=0;
+      msg[0]++;
+      lcd_driver_home();
+    }
     vTaskDelay(200);
   }
 }
