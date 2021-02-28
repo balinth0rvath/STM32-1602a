@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "application.h"
+#include "logger.h"
 #include "lcd_driver.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -75,6 +76,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   TaskHandle_t handle_lcd_driver = NULL;
   TaskHandle_t handle_application = NULL;
+  TaskHandle_t handle_logger = NULL;
   BaseType_t ret;
 
   ret = xTaskCreate(lcd_driver_task,
@@ -95,6 +97,18 @@ int main(void)
                     NULL,
                     PRIORITY_APPLICATION,
                     &handle_application );
+
+  if (ret != pdTRUE)
+  {
+    while(1);
+  }
+
+  ret = xTaskCreate(logger_task,
+                    "logger",
+                    STACK_SIZE_APPLICATION,
+                    NULL,
+                    PRIORITY_APPLICATION,
+                    &handle_logger );
 
   if (ret != pdTRUE)
   {
@@ -228,7 +242,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 9600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
