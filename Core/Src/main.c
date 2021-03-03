@@ -21,6 +21,8 @@
 #include "main.h"
 #include "application.h"
 #include "logger.h"
+#include "transmitter.h"
+#include "receiver.h"
 #include "lcd_driver.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -80,6 +82,8 @@ int main(void)
   TaskHandle_t handle_lcd_driver = NULL;
   TaskHandle_t handle_application = NULL;
   TaskHandle_t handle_logger = NULL;
+  TaskHandle_t handle_transmitter = NULL;
+  TaskHandle_t handle_receiver = NULL;
   BaseType_t ret;
 
   ret = xTaskCreate(lcd_driver_task,
@@ -117,6 +121,31 @@ int main(void)
   {
     while(1);
   }
+
+  ret = xTaskCreate(transmitter_task,
+                    "transmitter",
+                    STACK_SIZE_APPLICATION,
+                    NULL,
+                    PRIORITY_APPLICATION,
+                    &handle_transmitter );
+
+  if (ret != pdTRUE)
+  {
+    while(1);
+  }
+
+  ret = xTaskCreate(receiver_task,
+                    "receiver",
+                    STACK_SIZE_APPLICATION,
+                    NULL,
+                    PRIORITY_APPLICATION,
+                    &handle_receiver );
+
+  if (ret != pdTRUE)
+  {
+    while(1);
+  }
+
 
   /* USER CODE END 1 */
 
