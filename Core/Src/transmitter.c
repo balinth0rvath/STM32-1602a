@@ -10,7 +10,14 @@
 #include "task.h"
 #include "nrf24.h"
 
-static uint8_t nRF24_TransmitPacket(uint8_t* payload, uint8_t payload_length);
+typedef enum {
+  nRF24_TX_ERROR = 0,
+  nRF24_TX_SUCCESS,
+  nRF24_TX_TIMEOUT,
+  nRF24_TX_MAXRT
+} nRF24_TX_Result;
+
+static nRF24_TX_Result nRF24_TransmitPacket(uint8_t* payload, uint8_t payload_length);
 
 void transmitter_task()
 {
@@ -30,16 +37,56 @@ void transmitter_task()
   nRF24_SetOperationalMode(nRF24_MODE_TX);
 
   uint8_t payload[10] = {1,2,3,4,5,6,7,8,9,10};
+  uint8_t payload_length = 10;
+  uint8_t otx;
+  uint8_t otx_plot;
+  uint8_t otx_arc;
+  nRF24_TX_Result ret;
 
   while(1)
   {
-    uint8_t ret = nRF24_TransmitPacket(payload, sizeof(payload));
+    ret = nRF24_TransmitPacket(payload, payload_length);
+    otx = nRF24_GetRetransmitCounters();
+    otx_plot = (otx & nRF24_MASK_PLOS_CNT) >> 4;
+    otx_arc = otx & nRF24_MASK_ARC_CNT;
     vTaskDelay(500);
   }
 }
 
-uint8_t nRF24_TransmitPacket(uint8_t* payload, uint8_t payload_length)
+nRF24_TX_Result nRF24_TransmitPacket(uint8_t* payload, uint8_t payload_length)
 {
-  return 0;
+  volatile uint32_t wait = 0xfffff;
+  uint8_t status;
+  nRF24_CE_L();
+  nRF24_WritePayload(payload, payload_length);
+  nRF24_CE_H();
+
+  do {
+    status = nRF24_GetStatus();
+    if (status & (nRF24_FLAG_TX_DS | nRF24_FLAG_MAX_RT)) {
+      break;
+    }
+    vTaskDelay(1);
+  } while (wait--);
+
+  nRF24_CE_L();
+
+  if (!wait)
+  {
+    return nRF24_TX_TIMEOUT;
+  }
+
+  nRF24_ClearIRQFlags();
+
+  if (status & nRF24_FLAG_MAX_RT)
+  {
+    return nRF24_TX_MAXRT;
+  }
+  if (status & nRF24_FLAG_TX_DS)
+  {
+    return nRF24_TX_SUCCESS;
+  }
+  nRF24_FlushTX();
+  return nRF24_TX_ERROR;
 }
 
