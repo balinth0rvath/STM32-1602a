@@ -6,16 +6,25 @@
 #include "portable.h"
 
 /*
- *  RS  - GPIOB_PIN_5 - Register select
- *  RW  - L-write     - Read / Write
- *  E   - GPIOA_PIN_8 - Enable signal
+ *  Control
+ *
+ *  RS  - GPIOB_PIN_5 - Register select D4
+ *  RW  -               Read / Write GND
+ *  E   - GPIOA_PIN_8 - Enable signal D7
  *
  *  Data signals
  *
- *  DB4 - GPIOB_PIN_4
- *  DB5 - GPIOB_PIN_0
- *  DB6 - GPIOC_PIN_1
- *  DB7 - GPIOC_PIN_0
+ *  DB4 - GPIOB_PIN_4 D5
+ *  DB5 - GPIOB_PIN_0 A3
+ *  DB6 - GPIOC_PIN_1 A4
+ *  DB7 - GPIOC_PIN_0 A5
+ *
+ *  Power
+ *
+ *  VDD - 5V
+ *  V0  - 0.5V
+ *  A   - 3.3V
+ *  K   - GND
  */
 
 typedef enum {OFF, ON} state_t;
